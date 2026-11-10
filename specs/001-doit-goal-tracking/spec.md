@@ -8,6 +8,13 @@
 
 **Input**: User description: "This application should be a goal tracking web app called 'doit'. There should be two columns: a left one where current goals are shown, along with how many days left the user has to achieve the goal, and a right one where completed goals are. Each goal can be checked, using a checkbox, and then either moved to the completed column or permanently deleted. To add new goals, a user can click on a button to open a new goal form in a modal (title and end date fields). Goals reaching their end date (within 3 days) are highlighted. Use a modern light theme with fun pastel colours."
 
+## Clarifications
+
+### Session 2026-11-10
+
+- Q: Should checking a goal complete it immediately, or select it for a separate action? → A: Checking selects the goal; the user then chooses a separate Complete or Delete action.
+- Q: Should goals stay only in the user’s current browser, or sync across devices through an account? → A: Goals stay in the current browser; no account or cross-device syncing.
+
 ## User Scenarios & Testing *(mandatory)*
 
 This section defines user journeys and observable acceptance outcomes. It does not
@@ -151,8 +158,8 @@ other current goals by looking at the board.
 
 - The app is for one user at a time; sign-in, shared goals, and cross-user collaboration
   are outside this feature's scope.
-- Goals remain available to the same user on the same device and browser after closing
-  and reopening the app. Cross-device synchronization is not required.
+- Goals remain available in the user's current browser after closing and reopening the
+  app. Accounts and cross-device synchronization are outside this feature's scope.
 - End dates and days remaining use the user's local calendar date. The due date is
   included in the three-day approaching-deadline window.
 - A completed goal remains in the completed-goals column until the user permanently
