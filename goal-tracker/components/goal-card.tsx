@@ -1,17 +1,50 @@
 "use client";
 
+import { useDragOperation } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatGoalDate, getGoalDeadline, type Goal } from "@/lib/goals";
+import { Button } from "@/components/ui/button";
+import { formatGoalDate, getGoalDeadline, type Goal, type GoalStatus } from "@/lib/goals";
 import { cn } from "@/lib/utils";
 
 type GoalCardProps = {
   goal: Goal;
+  index: number;
+  groupId: GoalStatus;
+  canReorder: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   selected: boolean;
   onToggleSelect: (goalId: string) => void;
+  onMove: (status: GoalStatus, fromIndex: number, toIndex: number) => void;
 };
 
-export function GoalCard({ goal, selected, onToggleSelect }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  index,
+  groupId,
+  canReorder,
+  canMoveUp,
+  canMoveDown,
+  selected,
+  onToggleSelect,
+  onMove,
+}: GoalCardProps) {
   const deadline = getGoalDeadline(goal);
+  const { ref, handleRef, isDragging, isDropTarget } = useSortable({
+    id: goal.id,
+    index,
+    group: groupId,
+    disabled: !canReorder,
+  });
+  const { source } = useDragOperation();
+  const sourceSortable = source != null && isSortable(source) ? source : null;
+  const showInsertAfter =
+    sourceSortable !== null &&
+    sourceSortable.group === groupId &&
+    sourceSortable.initialIndex < index;
 
   const urgencyClasses =
     goal.status === "completed"
@@ -32,7 +65,25 @@ export function GoalCard({ goal, selected, onToggleSelect }: GoalCardProps) {
           : "text-goal-muted";
 
   return (
-    <div className={cn("rounded-2xl border p-4 shadow-sm transition-colors", urgencyClasses)}>
+    <div
+      ref={ref}
+      role="listitem"
+      className={cn(
+        "relative rounded-2xl border p-4 shadow-sm transition-colors",
+        urgencyClasses,
+        isDragging && "z-10 opacity-60 shadow-lg",
+        isDropTarget && sourceSortable?.id !== goal.id && "ring-2 ring-goal-accent",
+      )}
+    >
+      {isDropTarget && sourceSortable?.id !== goal.id ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute left-3 right-3 h-1 rounded-full bg-goal-accent",
+            showInsertAfter ? "-bottom-2" : "-top-2",
+          )}
+        />
+      ) : null}
       <div className="flex items-start gap-3">
         <Checkbox
           checked={selected}
@@ -61,6 +112,46 @@ export function GoalCard({ goal, selected, onToggleSelect }: GoalCardProps) {
             <p className="mt-2 text-xs font-medium text-emerald-700">Completed</p>
           )}
         </div>
+
+        {canReorder ? (
+          <div className="-mr-2 -mt-2 flex shrink-0 flex-col items-center gap-0.5">
+            <Button
+              ref={handleRef}
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Drag to reorder ${goal.title}`}
+              title="Drag to reorder"
+              className="h-8 w-8 cursor-grab touch-none text-goal-muted active:cursor-grabbing"
+            >
+              <GripVertical aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${goal.title} up`}
+              title="Move up"
+              disabled={!canMoveUp}
+              onClick={() => onMove(groupId, index, index - 1)}
+              className="h-7 w-8 text-goal-muted"
+            >
+              <ChevronUp aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${goal.title} down`}
+              title="Move down"
+              disabled={!canMoveDown}
+              onClick={() => onMove(groupId, index, index + 1)}
+              className="h-7 w-8 text-goal-muted"
+            >
+              <ChevronDown aria-hidden="true" />
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
